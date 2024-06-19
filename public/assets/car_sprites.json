@@ -1,0 +1,32 @@
+{
+    "frames": {
+        "car0": {
+            "frame": { "x": 303, "y": 83, "w": 1383, "h": 520 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 1383, "h": 520 },
+            "sourceSize": { "w": 1383, "h": 520 }
+        },
+        "car00": {
+            "frame": { "x": 314, "y": 632, "w": 1372, "h": 634 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 1372, "h": 634 },
+            "sourceSize": { "w": 1372, "h": 634 }
+        },
+        "car1": {
+            "frame": { "x": 314, "y": 1383, "w": 1372, "h": 487 },
+            "rotated": false,
+            "trimmed": false,
+            "spriteSourceSize": { "x": 0, "y": 0, "w": 1372, "h": 487 },
+            "sourceSize": { "w": 1372, "h": 487 }
+        }
+    },
+    "meta": {
+        "app": "https://www.leshylabs.com/apps/sstool/",
+        "version": "Leshy SpriteSheet Tool v0.8.4",
+        "image": "car_spritesheet.png",
+        "size": { "w": 2000, "h": 2000 },
+        "scale": 1
+    }
+}
