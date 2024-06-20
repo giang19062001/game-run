@@ -10,11 +10,10 @@ export class MainMenu extends Scene {
 
     create() {
         this.add.image(512, 384, "background");
-
-        this.logo = this.add.image(512, 300, "logo").setDepth(100);
+        this.logo = this.add.image(380, 200, "logo").setDepth(100);
 
         this.add
-            .text(512, 460, "Play game", {
+            .text(380, 300, "Play game", {
                 fontFamily: "Arial Black",
                 fontSize: 38,
                 color: "#ffffff",
