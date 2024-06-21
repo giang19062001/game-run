@@ -7,6 +7,7 @@ export class Game extends Scene {
         this.countStart = 3;
         this.countStartText = null;
         this.countStartTextEvent = null;
+        this.unDied = false
         this.isCar = false;
         this.isSki = false;
         this.isJump = false;
@@ -72,6 +73,7 @@ export class Game extends Scene {
         this.countStart = 3;
         this.countStartText = null;
         this.countStartTextEvent = null;
+        this.unDied = false
         this.isCar = false;
         this.isSki = false;
         this.isJump = false;
@@ -341,12 +343,16 @@ export class Game extends Scene {
         this.street.setDepth(0); // Đặt depth thấp hơn (ví dụ: 0)
 
         this.input.keyboard.on("keydown-UP", () => {
-            console.log("UP1");
-            this.pressKey = true;
+            if (!this.isCar) {
+                console.log("UP1");
+                this.pressKey = true;
+            }
         });
         this.input.keyboard.on("keydown-DOWN", () => {
-            console.log("DOWN1");
-            this.pressKey = true;
+            if (!this.isCar) {
+                console.log("DOWN1");
+                this.pressKey = true;
+            }
         });
         this.input.keyboard.on("keydown-SHIFT", () => {
             if (!this.isCar) {
@@ -371,13 +377,16 @@ export class Game extends Scene {
         if (this.countStart == 0) {
             this.backgroundMusic.play(); // bật nhạc nền
         }
+
         if (this.countStart == -1) {
+            if (this.isCar) {
+                this.street.tilePositionX += 40;
+                this.city.tilePositionX += 40;
+            }
             this.player.setVisible(true);
             // Di chuyển background để tạo cảm giác đang chạy
             this.street.tilePositionX += 2;
             this.city.tilePositionX += 2;
-            this.river.tilePositionX += 2;
-
             if (this.cursors.shift.isDown && this.pressKey) {
                 if (!this.isCar) {
                     //người mới lướt được
@@ -444,22 +453,26 @@ export class Game extends Scene {
             }
 
             if (this.cursors.up.isDown && this.pressKey && !this.isJump) {
-                console.log("UP2");
-                this.pressKey = false;
-                //đi lên
-                if (this.bottom) {
-                    this.top = true;
-                    this.bottom = false;
-                    this.player.setVelocityY(-6500);
+                if (!this.isCar) {
+                    console.log("UP2");
+                    this.pressKey = false;
+                    //đi lên
+                    if (this.bottom) {
+                        this.top = true;
+                        this.bottom = false;
+                        this.player.setVelocityY(-6500);
+                    }
                 }
             } else if (this.cursors.down.isDown && this.pressKey) {
-                console.log("DOWN2");
-                this.pressKey = false;
-                // đi xuống
-                if (this.top) {
-                    this.top = false;
-                    this.bottom = true;
-                    this.player.setVelocityY(6501);
+                if (!this.isCar) {
+                    console.log("DOWN2");
+                    this.pressKey = false;
+                    // đi xuống
+                    if (this.top) {
+                        this.top = false;
+                        this.bottom = true;
+                        this.player.setVelocityY(6501);
+                    }
                 }
             } else {
                 if (!this.isJump) {
@@ -467,9 +480,13 @@ export class Game extends Scene {
                 }
             }
             if (this.cursors.left.isDown) {
-                this.player.setVelocityX(-400);
+                if (!this.isCar) {
+                    this.player.setVelocityX(-400);
+                }
             } else if (this.cursors.right.isDown) {
-                this.player.setVelocityX(400);
+                if (!this.isCar) {
+                    this.player.setVelocityX(400);
+                }
             } else {
                 this.player.setVelocityX(0);
             }
@@ -579,19 +596,19 @@ export class Game extends Scene {
     }
 
     addGift() {
-        // if (this.countStart == -1) {
-        //     const positionY = Phaser.Math.RND.pick([525, 415]);
-        //     const gift = this.gifts.create(900, positionY, "gift");
-        //     gift.setVelocityX(-this.objectSpeed); // Đặt vận tốc ban đầu cho gift
-        //     gift.setScale(0.15);
-        //     gift.setCollideWorldBounds(true); // bật kiểm tra xem nó có va chạm với ranh giới của thế giới hay không
-        //     gift.body.onWorldBounds = true; //Kích hoạt sự kiện khi đối tượng đi ra ngoài ranh giới của thế giới.
-        //     gift.body.world.on("worldbounds", (body) => {
-        //         if (body.gameObject === gift) {
-        //             gift.destroy();
-        //         }
-        //     });
-        // }
+        if (this.countStart == -1) {
+            const positionY = Phaser.Math.RND.pick([525, 415]);
+            const gift = this.gifts.create(900, positionY, "gift");
+            gift.setVelocityX(-this.objectSpeed); // Đặt vận tốc ban đầu cho gift
+            gift.setScale(0.15);
+            gift.setCollideWorldBounds(true); // bật kiểm tra xem nó có va chạm với ranh giới của thế giới hay không
+            gift.body.onWorldBounds = true; //Kích hoạt sự kiện khi đối tượng đi ra ngoài ranh giới của thế giới.
+            gift.body.world.on("worldbounds", (body) => {
+                if (body.gameObject === gift) {
+                    gift.destroy();
+                }
+            });
+        }
     }
 
     hintConflict(object1, object2) {
@@ -711,7 +728,6 @@ export class Game extends Scene {
             this.player.setTexture("car", "carrun1"); //car1 tên frame trong JSON
             this.player.setScale(0.5);
             this.player.setDepth(3);
-
             //thời gian xe
             // Create the rounded rectangle background
             this.graphicCarText = this.add.graphics();
@@ -792,6 +808,8 @@ export class Game extends Scene {
                     });
                     this.player.anims.play("run");
                     // Làm mờ và nhấp nháy nhân vật
+                    this.isCar = false; // trở lại để đụng boom sẽ thua
+                    this.unDied = true // bất tử tạm thời
                     this.tweens.add({
                         targets: player,
                         alpha: 0,
@@ -811,7 +829,7 @@ export class Game extends Scene {
             this.time.delayedCall(
                 7000,
                 () => {
-                    this.isCar = false; // trở lại để đụng boom sẽ thua
+                    this.unDied = false; // trở lại để đụng boom sẽ thua
                 },
                 [],
                 this
