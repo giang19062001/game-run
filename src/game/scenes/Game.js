@@ -7,10 +7,11 @@ export class Game extends Scene {
         this.countStart = 3;
         this.countStartText = null;
         this.countStartTextEvent = null;
-        this.unDied = false
+        this.unDied = false;
         this.isCar = false;
         this.isSki = false;
         this.isJump = false;
+        this.isRain = false;
         this.carText = null;
         this.graphicCarText = null;
         this.player = null;
@@ -31,20 +32,20 @@ export class Game extends Scene {
         this.obstacleTimer = null;
         this.obstacleTimerSky = null;
         this.obstaclesTimerRoad = null;
-        this.objectSpeed = 200; // Vận tốc ban đầu của chướng ngại vật, gift
+        this.objectSpeed = 235; // Vận tốc ban đầu của chướng ngại vật, gift
         this.giftTimer = null;
         this.GameOver = false;
     }
 
     preload() {
         this.load.video("rain", "assets/rain.mp4", "loadeddata", false, true);
-
+        this.load.image("vhu", "assets/vhu.png");
         this.load.image("background", "assets/bg.png");
         this.load.image("street", "assets/street.jpg");
         this.load.image("city", "assets/city-empty.png");
         this.load.image("gift", "assets/gift.png");
         this.load.image("obstacle", "assets/banana.png");
-        this.load.image("obstacleSky", "assets/water.png");
+        this.load.image("obstacleSky", "assets/ice.png");
         this.load.image("obstaclesRoad", "assets/road.png");
         this.load.audio("skiMusic", "assets/ski.mp3");
         this.load.audio("stunnedMusic", "assets/stunned.mp3");
@@ -73,10 +74,11 @@ export class Game extends Scene {
         this.countStart = 3;
         this.countStartText = null;
         this.countStartTextEvent = null;
-        this.unDied = false
+        this.unDied = false;
         this.isCar = false;
         this.isSki = false;
         this.isJump = false;
+        this.isRain = false;
         this.carText = null;
         this.graphicCarText = null;
         this.player = null;
@@ -97,7 +99,7 @@ export class Game extends Scene {
         this.obstacleTimer = null;
         this.obstacleTimerSky = null;
         this.obstaclesTimerRoad = null;
-        this.objectSpeed = 200; // Vận tốc ban đầu của chướng ngại vật, gift
+        this.objectSpeed = 235; // Vận tốc ban đầu của chướng ngại vật, gift
         this.giftTimer = null;
         this.GameOver = false;
 
@@ -296,6 +298,11 @@ export class Game extends Scene {
                 fill: "#000",
             })
             .setDepth(1);
+        // tạo weather
+        this.weather = this.add.video(0, 0, "rain");              
+        this.weather.setDepth(0);
+        this.weather.setDisplaySize(300, 140);
+        this.weather.setLoop(true);
 
         //tạo river
         this.river = this.physics.add.sprite(510, 680, "river");
@@ -321,19 +328,16 @@ export class Game extends Scene {
         });
         this.river.anims.play("animated_river");
 
-        //tạo thời tiết
-
-        this.weather = this.add.video(0, 0, "rain");
-        this.weather.setDepth(0);
-        this.weather.setDisplaySize(300, 140);
-        this.weather.play(true);
-        this.weather.setLoop(true);
-        this.weather.setPaused(false);
-
         //tạo city
         this.city = this.add.tileSprite(100, 255, 1900, 305, "city");
         this.city.setOrigin(0.5, 0.5);
         this.city.setDepth(0);
+
+        //tạo trường
+        this.school = this.add.tileSprite(50, 190, 1950, 450, "vhu");
+        this.school.setOrigin(0.5, 0.5);
+        this.school.setDepth(0);
+        this.school.setVisible(false)
 
         //tạo đường
 
@@ -387,6 +391,7 @@ export class Game extends Scene {
             // Di chuyển background để tạo cảm giác đang chạy
             this.street.tilePositionX += 2;
             this.city.tilePositionX += 2;
+
             if (this.cursors.shift.isDown && this.pressKey) {
                 if (!this.isCar) {
                     //người mới lướt được
@@ -423,7 +428,7 @@ export class Game extends Scene {
                         this.pressKey = false;
                         this.player.anims.remove("run");
                         this.player.setGravityY(800); // Set trọng lực
-                        this.player.setVelocityY(-325);
+                        this.player.setVelocityY(-400);
                         this.player.anims.play("jump");
                         this.isJump = true;
                         this.jumpMusic.play();
@@ -442,9 +447,6 @@ export class Game extends Scene {
                                 if (!this.isCar) {
                                     this.player.setGravityY(0); // Set trọng lực
                                     this.player.setY(currentY); // về vị trí cũ
-                                    this.player.setX(
-                                        parseInt(this.player.x) + 30
-                                    );
                                 }
                             }
                         }, 600);
@@ -491,9 +493,38 @@ export class Game extends Scene {
                 this.player.setVelocityX(0);
             }
 
+            //chuyển cảnh
+         
+            if(this.score == 500 || this.score == 1500 || this.score == 2500){
+                this.weather.play(true);
+                this.weather.setPaused(false);
+                this.weather.setVisible(true)
+                this.isRain = true
+            }else if(this.score == 1000 || this.score == 2000){
+                this.weather.play(false);
+                this.weather.setPaused(true);
+                this.weather.setVisible(false)
+                this.isRain = false
+            }else if (this.score == 3000){
+                if(this.isCar){
+                    this.carText.destroy(); // xóa bộ đếm biến thành xe
+                    this.player.setTexture("player", "player"); // Chuyển lại sử dụng player1 và frame 'run'
+                    this.player.setDepth(1);
+                    this.player.anims.remove("carrun1"); // Dừng animation hiện tại nếu đang chạy
+                    this.player.setScale(0.7);
+                    this.isCar = false; 
+                }
+                this.school.setVisible(true) 
+                this.city.setVisible(false) 
+                this.physics.pause();
+                this.game.pause()
+            }
+
             // Update score
-            this.score += 1;
-            this.scoreText.setText(this.score);
+            if(this.score < 3000){
+                this.score += 1;
+                this.scoreText.setText(this.score);
+            }
         }
     }
     countStartGame() {
@@ -573,7 +604,7 @@ export class Game extends Scene {
         }
     }
     addObstacleSky() {
-        if (this.countStart == -1) {
+        if (this.countStart == -1 && this.isRain) {
             // Tạo chướng ngại vật rơi từ trên trời xuống ngẫu nhiên
             const positionX = Phaser.Math.Between(100, 900);
             const obstacleSky = this.obstaclesSky.create(
@@ -616,6 +647,10 @@ export class Game extends Scene {
     }
     hitObstacle(player, obstacle) {
         if (!this.isCar) {
+            if (this.unDied) {
+                obstacle.disableBody(true, true); // ẩn gift đụng trúng
+                return;
+            }
             if (
                 !this.isJump &&
                 (parseInt(Math.round(this.player.y)) == 500 ||
@@ -653,7 +688,12 @@ export class Game extends Scene {
     }
     hitObstacleRoad(player, obstacleRoad) {
         if (!this.isCar && !this.isSki) {
-            if (obstacleRoad.y - parseInt(Math.round(this.player.y)) > 0) {
+            if (this.unDied) {
+                obstacleRoad.disableBody(true, true); // ẩn gift đụng trúng
+                return;
+            }
+            if (obstacleRoad.y - parseInt(Math.round(this.player.y)) >= 0) {
+                // khi nhảy ở dưới đụng thanh chắn ở trên ko sao và ngược lại
                 this.GameOver = true;
                 this.player.anims.remove("run");
                 this.player.anims.remove("ski");
@@ -687,6 +727,10 @@ export class Game extends Scene {
 
     hitObstacleSky(player, obstacleSky) {
         if (!this.isCar) {
+            if (this.unDied) {
+                obstacleSky.disableBody(true, true); // ẩn gift đụng trúng
+                return;
+            }
             this.GameOver = true;
 
             this.player.anims.remove("run");
@@ -719,7 +763,11 @@ export class Game extends Scene {
     }
 
     hitGift(player, gift) {
-        if (!this.isJump) {
+        if (
+            !this.isJump &&
+            (parseInt(Math.round(this.player.y)) == 500 ||
+                parseInt(Math.round(this.player.y)) == 392)
+        ) {
             gift.disableBody(true, true); // ẩn gift đụng trúng
             this.isCar = true; // biến thành xe
             this.player.anims.stop(); // Dừng animation hiện tại nếu đang chạy
@@ -809,7 +857,7 @@ export class Game extends Scene {
                     this.player.anims.play("run");
                     // Làm mờ và nhấp nháy nhân vật
                     this.isCar = false; // trở lại để đụng boom sẽ thua
-                    this.unDied = true // bất tử tạm thời
+                    this.unDied = true; // bất tử tạm thời
                     this.tweens.add({
                         targets: player,
                         alpha: 0,
@@ -837,4 +885,5 @@ export class Game extends Scene {
         }
     }
 }
+
 

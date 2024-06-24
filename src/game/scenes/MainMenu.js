@@ -9,9 +9,11 @@ export class MainMenu extends Scene {
     }
 
     create() {
-        this.cameras.main.setBackgroundColor('#ffffff')
+        this.add.image(550, 385, "bg_game");
+        this.add.image(145, 65, "mix").setDisplaySize(280,120)
+        // this.cameras.main.setBackgroundColor('#ffffff')
         this.add
-        .image(405, 335, "play_btn")
+        .image(390, 335, "play_btn")
         .setOrigin(0, 0)
         .setInteractive()
         .on("pointerup", () => {
