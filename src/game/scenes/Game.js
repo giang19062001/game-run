@@ -33,9 +33,10 @@ export class Game extends Scene {
         this.obstacleTimerSky = null;
         this.obstaclesTimerRoad = null;
         this.giftTimer = null;
-        this.objectSpeed = 235; // Vận tốc ban đầu của chướng ngại vật, gift
+        this.objectSpeed = 250; // Vận tốc ban đầu của chướng ngại vật, gift
         this.GameOver = false;
-        this.winTime = 3000;
+        this.TimeWin = 3000;
+        this.GameWin = false;
         this.winTimer = null;
     }
 
@@ -46,6 +47,7 @@ export class Game extends Scene {
         this.load.image("street", "assets/street.jpg");
         this.load.image("city", "assets/city-empty.png");
         this.load.image("gift", "assets/be.png");
+        this.load.image("win", "assets/win.png");
         this.load.image("obstacle", "assets/banana.png");
         this.load.image("obstacleSky", "assets/ice.png");
         this.load.image("obstaclesRoad", "assets/road.png");
@@ -56,6 +58,9 @@ export class Game extends Scene {
         this.load.audio("backgroundMusic", "assets/background.mp3");
         this.load.audio("winMusic", "assets/win.mp3");
         this.load.audio("rainMusic", "assets/rain.mp3");
+        this.load.audio("carMusic", "assets/car.mp3");
+        this.load.audio("thunderMusic", "assets/thunder.mp3");
+
         this.load.atlas(
             "river",
             "assets/river_spritesheet.png",
@@ -104,11 +109,11 @@ export class Game extends Scene {
         this.obstacleTimerSky = null;
         this.obstaclesTimerRoad = null;
         this.giftTimer = null;
-        this.objectSpeed = 235; // Vận tốc ban đầu của chướng ngại vật, gift
+        this.objectSpeed = 250; // Vận tốc ban đầu của chướng ngại vật, gift
         this.GameOver = false;
-        this.winTime = 3000;
+        this.TimeWin = 3000;
+        this.GameWin = false;
         this.winTimer = null;
-
 
         this.add.image(0, 0, "background").setOrigin(0, 0);
         this.backgroundMusic = this.sound.add("backgroundMusic", {
@@ -121,6 +126,8 @@ export class Game extends Scene {
         this.jumpMusic = this.sound.add("jumpMusic");
         this.winMusic = this.sound.add("winMusic");
         this.rainMusic = this.sound.add("rainMusic");
+        this.carMusic = this.sound.add("carMusic");
+        this.thunderMusic = this.sound.add("thunderMusic");
 
         // tạo bộ đếm bắt đầu chơi
 
@@ -146,7 +153,7 @@ export class Game extends Scene {
                 { key: "player", frame: "run5" },
                 { key: "player", frame: "run6" },
             ],
-            frameRate: 10,
+            frameRate: 11,
             repeat: -1,
         });
         this.anims.create({
@@ -245,14 +252,14 @@ export class Game extends Scene {
         );
         // // bộ lặp tạo chướng ngại vật thanh chắn
         this.obstaclesTimerRoad = this.time.addEvent({
-            delay: 5500,
+            delay: 5000,
             callback: this.addObstacleRoad,
             callbackScope: this,
             loop: true,
         });
         // // bộ lặp tạo chướng ngại vật
         this.obstacleTimer = this.time.addEvent({
-            delay: 2000,
+            delay: 1500,
             callback: this.addObstacle,
             callbackScope: this,
             loop: true,
@@ -260,7 +267,7 @@ export class Game extends Scene {
 
         // // bộ lặp tạo chướng ngại vật trên trời
         this.obstacleTimerSky = this.time.addEvent({
-            delay: 3000,
+            delay: 1000,
             callback: this.addObstacleSky,
             callbackScope: this,
             loop: true,
@@ -277,6 +284,7 @@ export class Game extends Scene {
             null,
             this
         );
+
         // tạo hàm xử  lí khi obstacles xuất hiện cùng chỗ  vật phẩm bí ẩn
         this.physics.add.overlap(
             this.obstacles,
@@ -296,7 +304,7 @@ export class Game extends Scene {
 
         // bộ lặp tạo  vật phẩm bí ẩn
         this.giftTimer = this.time.addEvent({
-            delay: 15000,
+            delay: 17000,
             callback: this.addGift,
             callbackScope: this,
             loop: true,
@@ -315,7 +323,9 @@ export class Game extends Scene {
         this.scoreText = this.add
             .text(10, 0, "0", {
                 font: "bold 28px Arial", // Set the font weight, size, and family
-                fill: "#000",
+                color: "#ffffff",
+                stroke: "#000000",
+                strokeThickness: 5,
             })
             .setDepth(1);
         // tạo weather
@@ -365,6 +375,12 @@ export class Game extends Scene {
         this.street.setOrigin(0.5, 0.5);
 
         this.street.setDepth(0); // Đặt depth thấp hơn (ví dụ: 0)
+
+        // tạo ảnh win
+        this.winImage = this.add.image(470, 350, "win");
+        this.winImage.setOrigin(0.5);
+        this.winImage.setScale(0);
+        this.winImage.setVisible(false);
 
         this.input.keyboard.on("keydown-UP", () => {
             if (!this.isCar) {
@@ -502,30 +518,84 @@ export class Game extends Scene {
             }
             if (this.cursors.left.isDown) {
                 if (!this.isCar) {
-                    this.player.setVelocityX(-400);
+                    if (this.isRain) {
+                        //chỉ di chuyển được khi trời mưa
+                        this.player.setVelocityX(-400);
+                    }
                 }
             } else if (this.cursors.right.isDown) {
                 if (!this.isCar) {
-                    this.player.setVelocityX(400);
+                    if (this.isRain) {
+                        //chỉ di chuyển được khi trời mưa
+                        this.player.setVelocityX(400);
+                    }
                 }
             } else {
                 this.player.setVelocityX(0);
             }
-
             //chuyển cảnh
-            if (this.score == 500 || this.score == 1500 || this.score == 2500) {
+            if (this.score % 500 === 0 && (this.score / 500) % 2 !== 0 && this.score !== 0) {
                 this.weather.play(true);
                 this.weather.setPaused(false);
                 this.weather.setVisible(true);
                 this.isRain = true;
                 this.rainMusic.play(); // bật nhạc mưa
-            } else if (this.score == 1000 || this.score == 2000) {
+            } else if ((this.score + 5) % 500 === 0   && ((this.score + 5) / 500) % 2 !== 0  && this.score !== 0) {
+                this.thunderMusic.play(); // bật nhạc sấm chớp
+                // Tạo hiệu ứng chớp sáng
+                this.thunder = this.add.rectangle(
+                    400,
+                    300,
+                    2000,
+                    1500,
+                    0xffffff,
+                    1
+                );
+                this.tweens.add({
+                    targets: this.thunder,
+                    alpha: 0,
+                    duration: 100,
+                    ease: "Cubic.easeOut",
+                    onComplete: () => {
+                        this.thunder.destroy();
+                    },
+                });
+
+                // Tạo hiệu ứng chớp sáng lần hai để giống sấm chớp thật
+                this.time.delayedCall(200, () => {
+                    this.thunder = this.add.rectangle(
+                        400,
+                        300,
+                        2000,
+                        1500,
+                        0xffffff,
+                        1
+                    );
+                    this.tweens.add({
+                        targets: this.thunder,
+                        alpha: 0,
+                        duration: 100,
+                        ease: "Cubic.easeOut",
+                        onComplete: () => {
+                            this.thunder.destroy();
+                        },
+                    });
+                });
+            } else if (
+                this.score % 500 === 0 &&
+               (this.score / 500) % 2 === 0 &&
+                this.score !== this.TimeWin &&
+                this.score !== 0
+            ) {
+
                 this.weather.play(false);
                 this.weather.setPaused(true);
                 this.weather.setVisible(false);
                 this.isRain = false;
                 this.rainMusic.stop(); // tắt nhạc mưa
-            } else if (this.score == this.winTime - 1) {
+            } else if (this.score == this.TimeWin - 1) {
+                this.GameWin = true;
+                this.weather.destroy(); // xóa cảnh mưa
                 this.rainMusic.stop(); // tắt nhạc mưa
                 this.rainMusic.destroy(); // tắt nhạc mưa
                 this.backgroundMusic.stop(); // tắt nhạc nền
@@ -572,14 +642,14 @@ export class Game extends Scene {
                     gift.setVisible(false);
                     gift.setActive(false);
                 });
-                this.player.setX(50)
-                this.player.setY(340)
+                this.player.setX(10);
+                this.player.setY(340);
 
                 this.school.setVisible(true);
                 this.city.setVisible(false);
 
-                function moveSchool(){
-                    this.player.setVelocityX(500)
+                function moveSchool() {
+                    this.player.setVelocityX(550);
                 }
 
                 this.winTimer = this.time.addEvent({
@@ -588,21 +658,45 @@ export class Game extends Scene {
                     callbackScope: this,
                     loop: true,
                 });
+                setTimeout(() => {
+                    this.winImage.setVisible(true);
+                    this.winImage.setInteractive().on("pointerup", () => {
+                        //đổi scene
+                        this.scene.start("MainMenu");
+                    });
+                    this.tweens.add({
+                        targets: this.winImage,
+                        scale: 1,
+                        duration: 1000,
+                        ease: "Power2",
+                    });
+                }, 1300);
             }
 
-            if(this.score == this.winTime && this.player.x > 500){
-                this.player.setActive(false)
-                this.player.setVisible(false)
-                this.winTimer.remove()
+            if (this.score == this.TimeWin && this.player.x > 500) {
+                this.player.setActive(false);
+                this.player.setVisible(false);
+                this.winTimer.remove();
             }
             // Update score
-            if (this.score < this.winTime) {
-                    // Di chuyển background để tạo cảm giác đang chạy
-                    this.street.tilePositionX += 2;
-                    this.city.tilePositionX += 2;
-                    this.score += 1;
-                    this.scoreText.setText(this.score);
+            if (this.score < this.TimeWin) {
+                // Di chuyển background để tạo cảm giác đang chạy
+                this.street.tilePositionX += 2.5;
+                this.city.tilePositionX += 2.5;
+                this.score += 1;
+                this.scoreText.setText(this.score);
             }
+
+            // Kiểm tra vị trí của các chướng ngại vật trên trời nếu rơi xuống sông hoặc trời tạnh mưa
+            this.obstaclesSky.children.iterate((obstacleSky) => {
+                if (obstacleSky.y >= 600 || ( this.score % 500 === 0 &&
+                    (this.score / 500) % 2 === 0 &&
+                     this.score !== this.TimeWin &&
+                     this.score !== 0)) {
+                    obstacleSky.setActive(false);
+                    obstacleSky.setVisible(false);
+                }
+            });
         }
     }
     countStartGame() {
@@ -647,8 +741,7 @@ export class Game extends Scene {
         this.countStart -= 1;
     }
     addObstacle() {
-
-        if (this.countStart == -1 && this.score < this.winTime) {
+        if (this.countStart == -1 && this.score < this.TimeWin) {
             const positionY = Phaser.Math.RND.pick([525, 425]);
             const obstacle = this.obstacles.create(1000, positionY, "obstacle");
             obstacle.setVelocityX(-this.objectSpeed); // Đặt vận tốc ban đầu cho chướng ngại vật
@@ -663,7 +756,7 @@ export class Game extends Scene {
         }
     }
     addObstacleRoad() {
-        if (this.countStart == -1 && this.score < this.winTime) {
+        if (this.countStart == -1 && this.score < this.TimeWin) {
             const positionY = Phaser.Math.RND.pick([500, 395]);
             const obstaclesRoad = this.obstaclesRoad.create(
                 980,
@@ -683,9 +776,9 @@ export class Game extends Scene {
         }
     }
     addObstacleSky() {
-        if (this.countStart == -1 && this.isRain && this.score < this.winTime) {
+        if (this.countStart == -1 && this.isRain && this.score < this.TimeWin) {
             // Tạo chướng ngại vật rơi từ trên trời xuống ngẫu nhiên
-            const positionX = Phaser.Math.Between(100, 900);
+            const positionX = Phaser.Math.Between(10, 900);
             const obstacleSky = this.obstaclesSky.create(
                 positionX,
                 30,
@@ -706,7 +799,7 @@ export class Game extends Scene {
     }
 
     addGift() {
-        if (this.countStart == -1 && this.score < this.winTime) {
+        if (this.countStart == -1 && this.score < this.TimeWin) {
             const positionY = Phaser.Math.RND.pick([525, 415]);
             const gift = this.gifts.create(900, positionY, "gift");
             gift.setVelocityX(-this.objectSpeed); // Đặt vận tốc ban đầu cho gift
@@ -725,9 +818,9 @@ export class Game extends Scene {
         object1.disableBody(true, true); // ẩn obstacle đụng trúng
     }
     hitObstacle(player, obstacle) {
-        if(this.score == this.winTime){
+        if (this.score == this.TimeWin) {
             obstacle.disableBody(true, true); // ẩn obstacle đụng trúng
-            return
+            return;
         }
         if (!this.isCar) {
             if (this.unDied) {
@@ -770,9 +863,9 @@ export class Game extends Scene {
         }
     }
     hitObstacleRoad(player, obstacleRoad) {
-        if(this.score == this.winTime){
+        if (this.score == this.TimeWin) {
             obstacleRoad.disableBody(true, true); // ẩn obstacle đụng trúng
-            return
+            return;
         }
         if (!this.isCar && !this.isSki) {
             if (this.unDied) {
@@ -814,9 +907,9 @@ export class Game extends Scene {
     }
 
     hitObstacleSky(player, obstacleSky) {
-        if(this.score == this.winTime){
+        if (this.score == this.TimeWin) {
             obstacleSky.disableBody(true, true); // ẩn obstacle đụng trúng
-            return
+            return;
         }
         if (!this.isCar) {
             if (this.unDied) {
@@ -856,9 +949,9 @@ export class Game extends Scene {
     }
 
     hitGift(player, gift) {
-        if(this.score == this.winTime){
+        if (this.score == this.TimeWin) {
             gift.disableBody(true, true); // ẩn obstacle đụng trúng
-            return
+            return;
         }
         if (
             !this.isJump &&
@@ -872,24 +965,26 @@ export class Game extends Scene {
             this.player.anims.remove("ski"); // Xóa animation 'ski' của player
             this.player.anims.remove("jump"); // Xóa animation 'ski' của player
             this.player.setTexture("car", "carrun1"); //car1 tên frame trong JSON
+            this.carMusic.play(); //bật tiếng xe
+
             this.player.setScale(0.5);
             this.player.setDepth(3);
             //thời gian xe
             // Create the rounded rectangle background
             this.graphicCarText = this.add.graphics();
-            const x = 980;
+            const x = 970;
             const y = 5;
-            const width = 40;
-            const height = 40;
+            const width = 50;
+            const height = 50;
             const radius = 20;
-            const color = "#000000"; // Blue background
+            const color = 0xfad807; // be background
             this.graphicCarText.fillStyle(color, 1);
             this.graphicCarText.fillRoundedRect(x, y, width, height, radius);
 
             // Add the text
             const textStyle = {
-                font: "24px Arial",
-                fill: "#ffffff", // White text
+                font: "bold 32px Arial",
+                fill: 0x176db4, // White text
                 align: "center",
             };
             this.carText = this.add.text(
@@ -938,6 +1033,7 @@ export class Game extends Scene {
                 () => {
                     this.graphicCarText.destroy();
                     this.carText.destroy(); // xóa bộ đếm biến thành xe
+                    this.carMusic.stop(); //tắt tiếng xe
                     this.player.setTexture("player", "player"); // Chuyển lại sử dụng player1 và frame 'run'
                     this.player.setDepth(1);
                     this.player.anims.remove("carrun1"); // Dừng animation hiện tại nếu đang chạy
@@ -955,7 +1051,8 @@ export class Game extends Scene {
                     this.player.anims.play("run");
                     // Làm mờ và nhấp nháy nhân vật
                     this.isCar = false; // trở lại để đụng boom sẽ thua
-                    if(this.score <  this.winTime){
+                    console.log("this.GameWin", this.score);
+                    if (this.score < this.TimeWin - 100) {
                         this.unDied = true; // bất tử tạm thời
                         this.tweens.add({
                             targets: player,
