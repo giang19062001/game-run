@@ -9,15 +9,15 @@ export class GameOver extends Scene {
     create() {
         // Lấy điểm số từ dữ liệu toàn cục
         const score = this.registry.get("score");
-        this.add.image(550, 385, "bg_lose");
+        this.add.image(511, 385, "bg_lose");
 
         this.add
             .text(520, 300, "Game Over: " + score, {
                 fontFamily: "Arial Black",
-                fontSize: 64,
-                color: "#ffffff",
-                stroke: "#000000",
-                strokeThickness: 10,
+                fontSize: 72,
+                color: "#FE0000",
+                stroke: "#ffffff",
+                strokeThickness: 15,
                 align: "center",
             })
             .setOrigin(0.5)
@@ -25,7 +25,7 @@ export class GameOver extends Scene {
 
         this.cameras.main.setBackgroundColor("#C80036");
         this.add
-            .image(390, 355, "play_btn")
+            .image(370, 325, "replay_btn")
             .setOrigin(0, 0)
             .setInteractive()
             .on("pointerup", () => {
