@@ -45,11 +45,11 @@ export class Game extends Scene {
         this.load.image("progress3", "assets/progress3.png");
         this.load.image("progress4", "assets/progress4.png");
         this.load.image("progress5", "assets/progress5.png");
-        this.load.image("vhu", "assets/vhu.png");
+        this.load.image("school", "assets/school.png");
         this.load.image("background", "assets/bg.png");
         this.load.video("rain", "assets/rain.mp4", "loadeddata", false, true);
         this.load.image("street", "assets/street.jpg");
-        this.load.image("city", "assets/city-empty.png");
+        this.load.image("city", "assets/city-empty-nvl.png");
         this.load.image("win", "assets/win.png");
         this.load.image("home", "assets/home.png");
 
@@ -368,7 +368,7 @@ export class Game extends Scene {
         this.city.setDepth(0);
 
         //tạo trường
-        this.school = this.add.tileSprite(50, 190, 1950, 450, "vhu");
+        this.school = this.add.tileSprite(50, 190, 1950, 450, "school");
         this.school.setOrigin(0.5, 0.5);
         this.school.setDepth(0);
         this.school.setVisible(false);
@@ -547,6 +547,7 @@ export class Game extends Scene {
                 (this.score / 500) % 2 !== 0 &&
                 this.score !== 0
             ) {
+                //trời mưa
                 this.weather.play(true);
                 this.weather.setPaused(false);
                 this.weather.setVisible(true);
@@ -557,6 +558,7 @@ export class Game extends Scene {
                 ((this.score + 5) / 500) % 2 !== 0 &&
                 this.score !== 0
             ) {
+                //trời chuẩn bị mưa
                 this.thunderMusic.play(); // bật nhạc sấm chớp
                 // Tạo hiệu ứng chớp sáng
                 this.thunder = this.add.rectangle(
@@ -603,6 +605,7 @@ export class Game extends Scene {
                 this.score !== this.TimeWin &&
                 this.score !== 0
             ) {
+                //trời nắng
                 this.weather.play(false);
                 this.weather.setPaused(true);
                 this.weather.setVisible(false);
@@ -941,6 +944,9 @@ export class Game extends Scene {
             if (this.unDied) {
                 obstacleSky.disableBody(true, true); // ẩn gift đụng trúng
                 return;
+            }
+            if (!this.isRain) {
+                return
             }
             this.GameOver = true;
 
