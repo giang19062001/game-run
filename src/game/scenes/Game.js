@@ -78,7 +78,7 @@ export class Game extends Scene {
         );
         this.load.atlas(
             "car",
-            "assets/car_spritesheet.png",
+            "assets/car.png",
             "assets/car_sprites.json"
         );
     }
